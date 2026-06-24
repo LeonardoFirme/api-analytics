@@ -2,7 +2,6 @@
 import { NextResponse } from 'next/server';
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
 
-// O client usa as variáveis de ambiente que você configurará no painel da Vercel
 const analyticsDataClient = new BetaAnalyticsDataClient();
 
 export async function GET() {
@@ -15,9 +14,16 @@ export async function GET() {
     const activeUsers = response.rows?.[0]?.metricValues?.[0]?.value || 0;
 
     return NextResponse.json({ activeUsers }, {
-      headers: { 'Cache-Control': 's-maxage=30, stale-while-revalidate' }
+      headers: {
+        'Access-Control-Allow-Origin': 'https://leonardofirme.com.br', // Libera apenas para o seu site
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Cache-Control': 's-maxage=30, stale-while-revalidate'
+      }
     });
   } catch (error) {
-    return NextResponse.json({ activeUsers: 0 }, { status: 500 });
+    return NextResponse.json({ activeUsers: 0 }, {
+      status: 500,
+      headers: { 'Access-Control-Allow-Origin': 'https://leonardofirme.com.br' }
+    });
   }
 }
