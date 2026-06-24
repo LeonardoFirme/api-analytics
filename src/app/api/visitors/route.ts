@@ -2,16 +2,15 @@
 import { NextResponse } from 'next/server';
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
 
+// A variável GOOGLE_APPLICATION_CREDENTIALS na Vercel deve conter o JSON completo da sua service account
 const analyticsDataClient = new BetaAnalyticsDataClient();
 
-// Função auxiliar para definir cabeçalhos CORS
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://leonardofirme.com.br',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-// Handler para requisições OPTIONS (Preflight)
 export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders });
 }
@@ -21,7 +20,8 @@ export async function GET() {
     const propertyId = process.env.GA_PROPERTY_ID;
 
     if (!propertyId) {
-      throw new Error('GA_PROPERTY_ID não configurado');
+      console.error('ERRO: GA_PROPERTY_ID não encontrado nas variáveis de ambiente.');
+      throw new Error('Configuração ausente');
     }
 
     const [response] = await analyticsDataClient.runRealtimeReport({
@@ -31,23 +31,15 @@ export async function GET() {
 
     const activeUsers = response.rows?.[0]?.metricValues?.[0]?.value || 0;
 
+    // Log para depuração no painel da Vercel
+    console.log(`Debug API: Propriedade ${propertyId} retornou ${activeUsers} usuários.`);
+
     return NextResponse.json(
       { activeUsers: parseInt(activeUsers as string, 10) },
-      {
-        headers: {
-          ...corsHeaders,
-          'Cache-Control': 's-maxage=30, stale-while-revalidate',
-        },
-      }
+      { headers: { ...corsHeaders, 'Cache-Control': 's-maxage=15' } }
     );
-  } catch (error) {
-    console.error('Erro na API de visitantes:', error);
-    return NextResponse.json(
-      { activeUsers: 0 },
-      {
-        status: 500,
-        headers: corsHeaders,
-      }
-    );
+  } catch (error: any) {
+    console.error('Erro detalhado no servidor:', error.message);
+    return NextResponse.json({ activeUsers: 0 }, { status: 500, headers: corsHeaders });
   }
 }
