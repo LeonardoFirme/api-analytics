@@ -2,5 +2,10 @@
   "dependencies": {
     "@google-analytics/data": "^6.1.0",
     "next": "^16.2.9"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "@types/react": "^19.2.17",
+    "typescript": "^6.0.3"
   }
 }
